@@ -3,5 +3,8 @@ pandas
 numpy
 scikit-learn
 plotly
+matplotlib
+seaborn
+requests
 openai
 python-dotenv
