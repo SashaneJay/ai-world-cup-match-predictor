@@ -1,4 +1,6 @@
 from pathlib import Path
+from utils.feature_engineering import get_team_stats
+from utils.data_loader import load_matches
 
 import pandas as pd
 import plotly.express as px
@@ -160,4 +162,35 @@ st.subheader("🤖 Next Phase")
 
 st.info(
     "Next, we will engineer team form features and train a machine learning model to predict match outcomes."
+)
+
+df = load_matches()
+
+st.subheader("📊 Team Analytics")
+
+team = st.selectbox(
+    "Choose a Team",
+    teams
+)
+
+stats = get_team_stats(df, team)
+
+st.metric(
+    "Games Played",
+    stats["games"]
+)
+
+st.metric(
+    "Win Rate",
+    f"{stats['win_rate']:.2%}"
+)
+
+st.metric(
+    "Goals Scored/Game",
+    f"{stats['avg_goals_for']:.2f}"
+)
+
+st.metric(
+    "Goals Conceded/Game",
+    f"{stats['avg_goals_against']:.2f}"
 )
