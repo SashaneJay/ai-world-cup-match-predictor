@@ -2,40 +2,37 @@ import pandas as pd
 
 
 def get_team_stats(df, team):
-
     matches = df[
         (df["home_team"] == team) |
         (df["away_team"] == team)
     ]
 
-    wins = 0
-    goals_for = 0
-    goals_against = 0
-
-    for _, row in matches.iterrows():
-
-        if row["home_team"] == team:
-
-            goals_for += row["home_score"]
-            goals_against += row["away_score"]
-
-            if row["home_score"] > row["away_score"]:
-                wins += 1
-
-        else:
-
-            goals_for += row["away_score"]
-            goals_against += row["home_score"]
-
-            if row["away_score"] > row["home_score"]:
-                wins += 1
-
     games = len(matches)
+
+    if games == 0:
+        return {
+            "games": 0,
+            "wins": 0,
+            "win_rate": 0,
+            "avg_goals_for": 0,
+            "avg_goals_against": 0,
+        }
+
+    home = matches[matches["home_team"] == team]
+    away = matches[matches["away_team"] == team]
+
+    goals_for = home["home_score"].sum() + away["away_score"].sum()
+    goals_against = home["away_score"].sum() + away["home_score"].sum()
+
+    wins = (
+        (home["home_score"] > home["away_score"]).sum()
+        + (away["away_score"] > away["home_score"]).sum()
+    )
 
     return {
         "games": games,
         "wins": wins,
-        "win_rate": wins / games if games > 0 else 0,
-        "avg_goals_for": goals_for / games if games > 0 else 0,
-        "avg_goals_against": goals_against / games if games > 0 else 0
+        "win_rate": wins / games,
+        "avg_goals_for": goals_for / games,
+        "avg_goals_against": goals_against / games,
     }
