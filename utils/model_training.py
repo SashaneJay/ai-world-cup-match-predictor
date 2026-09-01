@@ -3,6 +3,9 @@ import pandas as pd
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import f1_score
 
 
 FEATURE_COLUMNS = [
@@ -251,3 +254,79 @@ def train_random_forest(df):
     len(X_train),
     len(X_test)
     )
+
+def compare_models(df):
+
+    ml_df = create_ml_dataset(df)
+
+    X = ml_df[FEATURE_COLUMNS]
+    y = ml_df["result"]
+
+    # Same chronological 80/20 split for every model
+    split_index = int(len(ml_df) * 0.8)
+
+    X_train = X.iloc[:split_index]
+    X_test = X.iloc[split_index:]
+
+    y_train = y.iloc[:split_index]
+    y_test = y.iloc[split_index:]
+
+    models = {
+        "Logistic Regression": LogisticRegression(
+            max_iter=2000,
+            class_weight="balanced",
+            random_state=42,
+        ),
+
+        "Random Forest": RandomForestClassifier(
+            n_estimators=300,
+            max_depth=12,
+            min_samples_leaf=5,
+            class_weight="balanced",
+            random_state=42,
+            n_jobs=-1,
+        ),
+
+        "Gradient Boosting": GradientBoostingClassifier(
+            n_estimators=150,
+            learning_rate=0.05,
+            max_depth=3,
+            random_state=42,
+        ),
+    }
+
+    results = []
+
+    for name, model in models.items():
+
+        model.fit(X_train, y_train)
+
+        predictions = model.predict(X_test)
+
+        accuracy = accuracy_score(
+            y_test,
+            predictions
+        )
+
+        macro_f1 = f1_score(
+            y_test,
+            predictions,
+            average="macro"
+        )
+
+        results.append(
+            {
+                "Model": name,
+                "Accuracy": accuracy,
+                "Macro F1": macro_f1,
+            }
+        )
+
+    results_df = pd.DataFrame(results)
+
+    results_df = results_df.sort_values(
+        "Macro F1",
+        ascending=False
+    ).reset_index(drop=True)
+
+    return results_df
