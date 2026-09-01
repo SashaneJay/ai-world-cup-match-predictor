@@ -330,3 +330,158 @@ def compare_models(df):
     ).reset_index(drop=True)
 
     return results_df
+
+from sklearn.linear_model import LogisticRegression
+
+
+def train_best_model(df):
+    ml_df = create_ml_dataset(df)
+
+    X = ml_df[FEATURE_COLUMNS]
+    y = ml_df["result"]
+
+    split_index = int(len(ml_df) * 0.8)
+
+    X_train = X.iloc[:split_index]
+    y_train = y.iloc[:split_index]
+
+    model = LogisticRegression(
+        max_iter=2000,
+        class_weight="balanced",
+        random_state=42,
+    )
+
+    model.fit(X_train, y_train)
+
+    return model
+
+def build_prediction_features(df, home_team, away_team, form_window=10):
+
+    data = df.copy()
+
+    # Clean the match data
+    data["home_score"] = pd.to_numeric(
+        data["home_score"],
+        errors="coerce"
+    )
+
+    data["away_score"] = pd.to_numeric(
+        data["away_score"],
+        errors="coerce"
+    )
+
+    data["date"] = pd.to_datetime(
+        data["date"],
+        errors="coerce"
+    )
+
+    data = data.dropna(
+        subset=[
+            "date",
+            "home_team",
+            "away_team",
+            "home_score",
+            "away_score",
+        ]
+    )
+
+    data = data.sort_values("date")
+
+    # Calculate recent statistics for one team
+    def recent_stats(team):
+
+        matches = data[
+            (data["home_team"] == team)
+            | (data["away_team"] == team)
+        ].tail(form_window)
+
+        if len(matches) == 0:
+            return {
+                "win_rate": 0.0,
+                "goals_for": 0.0,
+                "goals_against": 0.0,
+            }
+
+        wins = 0
+        goals_for = 0.0
+        goals_against = 0.0
+
+        for _, row in matches.iterrows():
+
+            if row["home_team"] == team:
+                team_score = row["home_score"]
+                opponent_score = row["away_score"]
+
+            else:
+                team_score = row["away_score"]
+                opponent_score = row["home_score"]
+
+            goals_for += team_score
+            goals_against += opponent_score
+
+            if team_score > opponent_score:
+                wins += 1
+
+        games = len(matches)
+
+        return {
+            "win_rate": wins / games,
+            "goals_for": goals_for / games,
+            "goals_against": goals_against / games,
+        }
+
+    # Calculate recent form for both teams
+    home_stats = recent_stats(home_team)
+    away_stats = recent_stats(away_team)
+
+    home_goal_difference = (
+        home_stats["goals_for"]
+        - home_stats["goals_against"]
+    )
+
+    away_goal_difference = (
+        away_stats["goals_for"]
+        - away_stats["goals_against"]
+    )
+
+    # Create features in exactly the same format
+    # used to train the model
+    features = pd.DataFrame(
+        [
+            {
+                "home_win_rate":
+                    home_stats["win_rate"],
+
+                "away_win_rate":
+                    away_stats["win_rate"],
+
+                "home_goals_for":
+                    home_stats["goals_for"],
+
+                "away_goals_for":
+                    away_stats["goals_for"],
+
+                "home_goals_against":
+                    home_stats["goals_against"],
+
+                "away_goals_against":
+                    away_stats["goals_against"],
+
+                "win_rate_difference":
+                    home_stats["win_rate"]
+                    - away_stats["win_rate"],
+
+                "goal_difference_difference":
+                    home_goal_difference
+                    - away_goal_difference,
+
+                "neutral_numeric": 1,
+            }
+        ],
+        columns=FEATURE_COLUMNS
+    )
+
+    # Final safety check against NaN values
+    features = features.fillna(0)
+
+    return features
