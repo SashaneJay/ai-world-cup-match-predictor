@@ -128,7 +128,7 @@ def create_ml_dataset(df, form_window=10):
 
             else:
                 result = "draw"
-
+                
             training_rows.append(
                 {
                     "date": match["date"],
@@ -173,6 +173,7 @@ def create_ml_dataset(df, form_window=10):
 
                     "result":
                         result,
+
                 }
             )
 
@@ -492,6 +493,7 @@ def build_prediction_features(df, home_team, away_team, form_window=10):
         away_stats["goals_for"]
         - away_stats["goals_against"]
     )
+
 
     # Create features in exactly the same format
     # used to train the model
