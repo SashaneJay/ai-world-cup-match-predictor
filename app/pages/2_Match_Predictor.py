@@ -226,8 +226,8 @@ else:
 
 
         st.caption(
-            "Prediction generated using Logistic Regression "
-            "with recent team form and scoring features."
+            "Prediction generated using Logistic Regression with "
+            "recent team form, scoring statistics and Elo team-strength ratings."
         )
 
         st.divider()
@@ -284,6 +284,52 @@ else:
         )
 
         st.divider()
+
+        st.subheader("⚡ Team Strength (Elo Rating)")
+
+        home_elo = features.iloc[0]["home_elo"]
+        away_elo = features.iloc[0]["away_elo"]
+        elo_difference = features.iloc[0]["elo_difference"]
+
+        elo_col1, elo_col2, elo_col3 = st.columns(3)
+
+        elo_col1.metric(
+            f"{team_a} Elo",
+            f"{home_elo:.0f}"
+        )
+
+        elo_col2.metric(
+            f"{team_b} Elo",
+            f"{away_elo:.0f}"
+        )
+
+        if elo_difference > 0:
+            stronger_team = team_a
+            advantage = elo_difference
+
+        elif elo_difference < 0:
+            stronger_team = team_b
+            advantage = abs(elo_difference)
+
+        else:
+            stronger_team = "Even"
+            advantage = 0
+
+        elo_col3.metric(
+            "Elo Advantage",
+            f"{advantage:.0f}",
+            help=f"Current Elo advantage for {stronger_team}"
+        )
+
+        if stronger_team != "Even":
+            st.caption(
+                f"📈 {stronger_team} has a {advantage:.0f}-point "
+                "Elo rating advantage based on historical international results."
+            )
+        else:
+            st.caption(
+                "Both teams currently have the same Elo rating."
+            )
 
         st.subheader(
             "🔥 Recent Form Comparison"

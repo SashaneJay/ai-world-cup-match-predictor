@@ -6,6 +6,8 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import f1_score
+from utils.elo import calculate_elo_history
+from utils.elo import update_elo
 
 
 FEATURE_COLUMNS = [
@@ -18,6 +20,9 @@ FEATURE_COLUMNS = [
     "win_rate_difference",
     "goal_difference_difference",
     "neutral_numeric",
+    "home_elo",
+    "away_elo",
+    "elo_difference",
 ]
 
 
@@ -38,8 +43,10 @@ def create_ml_dataset(df, form_window=10):
 
     data = data.sort_values("date").reset_index(drop=True)
 
-    # Store each team's historical results.
     history = {}
+
+    ratings = {}
+    initial_elo = 1500
 
     training_rows = []
 
@@ -51,7 +58,9 @@ def create_ml_dataset(df, form_window=10):
         home_history = history.get(home_team, [])
         away_history = history.get(away_team, [])
 
-        # Require some previous history for both teams.
+        home_elo = ratings.get(home_team, initial_elo)
+        away_elo = ratings.get(away_team, initial_elo)
+
         if len(home_history) >= 5 and len(away_history) >= 5:
 
             home_recent = home_history[-form_window:]
@@ -153,6 +162,15 @@ def create_ml_dataset(df, form_window=10):
                     "neutral_numeric":
                         int(match["neutral"]),
 
+                    "home_elo":
+                        home_elo,
+
+                    "away_elo":
+                        away_elo,
+
+                    "elo_difference":
+                        home_elo - away_elo,
+
                     "result":
                         result,
                 }
@@ -173,6 +191,27 @@ def create_ml_dataset(df, form_window=10):
         else:
             home_result = "draw"
             away_result = "draw"
+
+        # Convert the match result into an Elo score.
+        if home_score > away_score:
+            elo_result = 1.0
+
+        elif home_score < away_score:
+            elo_result = 0.0
+
+        else:
+            elo_result = 0.5
+
+
+        # Update Elo ratings AFTER the match.
+        new_home_elo, new_away_elo = update_elo(
+            home_elo,
+            away_elo,
+            elo_result,
+        )
+
+        ratings[home_team] = new_home_elo
+        ratings[away_team] = new_away_elo
 
         history.setdefault(
             home_team,
@@ -387,7 +426,17 @@ def build_prediction_features(df, home_team, away_team, form_window=10):
 
     data = data.sort_values("date")
 
-    # Calculate recent statistics for one team
+    _, current_ratings = calculate_elo_history(data)
+
+    home_elo = current_ratings.get(
+        home_team,
+        1500
+    )
+
+    away_elo = current_ratings.get(
+        away_team,
+        1500
+    )
     def recent_stats(team):
 
         matches = data[
@@ -476,6 +525,10 @@ def build_prediction_features(df, home_team, away_team, form_window=10):
                     - away_goal_difference,
 
                 "neutral_numeric": 1,
+
+                "home_elo": home_elo,
+                "away_elo": away_elo,
+                "elo_difference": home_elo - away_elo,
             }
         ],
         columns=FEATURE_COLUMNS
