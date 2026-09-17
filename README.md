@@ -61,6 +61,32 @@ The Streamlit application includes:
 - **Model Comparison** — compare machine learning model performance
 - **Model Performance** — inspect evaluation metrics and classification performance
 
+### Application Screenshots
+
+#### Analytics Dashboard
+
+Overview of the historical international football dataset and key analytics.
+
+![Analytics Dashboard](screenshots/home-dashboard.png)
+
+#### Match Predictor
+
+Interactive match prediction with win, draw, and loss probabilities based on team form and Elo ratings.
+
+![Match Predictor](screenshots/match-predictor.png)
+
+#### Team Analytics
+
+Historical performance and recent-form analysis for individual international teams.
+
+![Team Analytics](screenshots/team-analytics.png)
+
+#### Model Comparison
+
+Comparison of the machine learning models using accuracy and Macro F1.
+
+![Model Comparison](screenshots/model-comparison.png)
+
 #  Project Structure
 ai-world-cup-match-predictor/
 │
