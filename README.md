@@ -61,19 +61,7 @@ The Streamlit application includes:
 - **Model Comparison** — compare machine learning model performance
 - **Model Performance** — inspect evaluation metrics and classification performance
 
-## Technologies
-
-- Python
-- Pandas
-- NumPy
-- scikit-learn
-- Streamlit
-- Plotly
-- Git & GitHub
-
-## Project Structure
-
-```text
+#  Project Structure
 ai-world-cup-match-predictor/
 │
 ├── app/
@@ -90,3 +78,37 @@ ai-world-cup-match-predictor/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
+
+## Technologies
+
+- Python
+- Pandas
+- NumPy
+- scikit-learn
+- Streamlit
+- Plotly
+- Git & GitHub
+
+## Dataset
+
+The Streamlit application includes:
+
+- The project uses historical international football match results to construct team form, scoring, and Elo-based features.
+
+Match data is processed chronologically so that predictions and training features do not use information from future matches.
+
+## Project Goal
+
+- The goal of this project was to build an end-to-end machine learning system rather than only train a prediction model. It covers data preprocessing, feature engineering, model comparison, evaluation, football analytics, and deployment through an interactive web application.
+
+## Disclaimer
+
+- Predictions are generated from historical data and statistical patterns and should be treated as experimental model outputs rather than guaranteed match results.
+
+
+## Author
+
+-Augustus Jayawardene
+
+- GitHub: @SashaneJay
+
